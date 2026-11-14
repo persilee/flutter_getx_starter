@@ -1,4 +1,5 @@
 {
   "cmake.ignoreCMakeListsMissing": true,
-  "Codegeex.RepoIndex": true
+  "Codegeex.RepoIndex": true,
+  "cSpell.words": ["prefs"]
 }
