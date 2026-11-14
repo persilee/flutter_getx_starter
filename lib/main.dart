@@ -1,16 +1,8 @@
-import 'package:material_ui/material_ui.dart';
+// 初始化 Flutter 运行环境，并启动当前阶段的应用入口。
+
+import 'package:flutter_getx_starter/app.dart';
+import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MainApp());
-}
-
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
-    );
-  }
+  runApp(const App());
 }
