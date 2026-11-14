@@ -1,7 +1,7 @@
 // 组织本页面布局与交互入口，业务动作交给控制器或服务。
 
 import 'package:flutter/material.dart';
-import 'package:flutter_getx_starter/common/values/app_labels.dart';
+import 'package:flutter_getx_starter/common/index.dart';
 import 'package:flutter_getx_starter/pages/counter/counter_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -11,7 +11,7 @@ class HomePage extends StatelessWidget {
   // 根据当前参数与状态构建界面，交互通过回调交给状态拥有者。
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(AppLabels.appName)),
+      appBar: AppBar(title: const Text(AppConfig.appName)),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
