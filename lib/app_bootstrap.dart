@@ -1,8 +1,10 @@
 // 将异步初始化与页面渲染分开，提供加载、失败重试和就绪状态。
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import 'app.dart';
+import 'common/index.dart';
 import 'global.dart';
 
 class AppBootstrap extends StatefulWidget {
@@ -57,9 +59,12 @@ class _AppBootstrapState extends State<AppBootstrap> {
               : Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('初始化失败'),
+                    Text(TrKeys.initializationFailed.tr),
                     Text('$error'),
-                    FilledButton(onPressed: start, child: Text('重试')),
+                    FilledButton(
+                      onPressed: start,
+                      child: Text(TrKeys.retry.tr),
+                    ),
                   ],
                 ),
         ),

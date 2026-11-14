@@ -1,6 +1,7 @@
 // 装配根组件，将当前已经完成的主题、翻译与导航接入应用。
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 
 import 'common/index.dart';
@@ -13,6 +14,17 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) => GetMaterialApp(
     title: AppConfig.appName,
     debugShowCheckedModeBanner: false,
+    // 翻译
+    translations: AppTranslations(),
+    // 语言
+    locale: AppTranslations.fallbackLocale,
+    // 回退语言
+    fallbackLocale: AppTranslations.fallbackLocale,
+    // 支持的语言
+    supportedLocales: AppTranslations.supportedLocales,
+    // 本地化
+    localizationsDelegates: GlobalMaterialLocalizations.delegates,
+    // 首页
     home: const HomePage(),
   );
 }
