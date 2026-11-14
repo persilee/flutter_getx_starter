@@ -1,0 +1,12 @@
+// 按依赖顺序注册公共服务，页面在初始化完成后再读取服务。
+
+import 'package:get/get.dart';
+
+import 'common/index.dart';
+
+class Global {
+  // 完成当前模块的初始化，准备后续调用所需的依赖或状态。
+  static Future<void> init() async {
+    await Get.putAsync(() => StorageService().init());
+  }
+}
