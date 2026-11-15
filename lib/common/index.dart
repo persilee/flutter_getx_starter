@@ -9,6 +9,5 @@ export 'widgets/index.dart';
 export 'components/index.dart';
 export 'network/index.dart';
 export 'api/index.dart';
-export 'utils/index.dart';
 export 'extension/index.dart';
 export 'routers/index.dart';

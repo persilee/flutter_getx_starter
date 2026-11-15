@@ -10,7 +10,7 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
 
 import '../services/index.dart';
-
+import 'interceptors.dart';
 import 'network_config.dart';
 // 条件导入在编译期选择实现；Web 不导入 dart:io，原生平台才使用 IO 版本。
 import 'platform_adapter.dart' if (dart.library.io) 'platform_adapter_io.dart';
@@ -94,6 +94,9 @@ class NetworkService extends GetxService {
     // 当前阶段先装配业务请求链；独立的刷新与重放客户端在第 8 章接入。
 
     configurePlatformAdapter(dio);
+
+    // 按本节已经实现的能力装配请求链；后续课节逐步增加鉴权和日志处理。
+    dio.interceptors.addAll([ErrorInterceptor()]);
 
     return dio;
   }

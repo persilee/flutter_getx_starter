@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../i18n/index.dart';
 import '../style/index.dart';
-import '../utils/index.dart';
+import '../network/index.dart';
 import 'button.dart';
 import 'text.dart';
 
