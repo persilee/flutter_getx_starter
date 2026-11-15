@@ -91,12 +91,22 @@ class NetworkService extends GetxService {
     // 用来源配置构造业务客户端，后续在这个实例上装配平台适配和拦截器。
     final dio = Dio(_baseOptions(endpoint));
 
-    // 当前阶段先装配业务请求链；独立的刷新与重放客户端在第 8 章接入。
+    // 用于刷新 Token 与失败重放，不挂拦截器避免递归
+    // 另建同配置但不挂业务拦截器的客户端，供刷新与重放使用，防止刷新递归。
+    final refreshDio = Dio(_baseOptions(endpoint));
 
     configurePlatformAdapter(dio);
+    configurePlatformAdapter(refreshDio);
 
     // 按本节已经实现的能力装配请求链；后续课节逐步增加鉴权和日志处理。
     dio.interceptors.addAll([
+      // 只有需要鉴权的来源才挂载 AuthInterceptor；认证白名单还会在其内部放行。
+      if (endpoint.requiresAuth)
+        AuthInterceptor(
+          tokenStorage: tokenService,
+          sessionService: sessionService,
+          refreshDio: refreshDio,
+        ),
       // 来源配置控制日志开关；日志拦截器先脱敏再输出。
       if (endpoint.enableLogging) LoggingInterceptor(),
       ErrorInterceptor(),

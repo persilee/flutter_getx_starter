@@ -1,5 +1,7 @@
 // 封装请求链中的独立职责，由网络客户端统一装配。
 
+export 'auth_interceptor.dart';
+
 import 'package:dio/dio.dart';
 
 import 'api_exception.dart';
