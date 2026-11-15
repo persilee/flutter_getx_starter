@@ -53,4 +53,20 @@ void main() {
     expect(original.calls[0].headers['Authorization'], 'Bearer old');
     expect(original.calls[1].headers.containsKey('Authorization'), isFalse);
   });
+  test('过期请求先刷新再发出', () async {
+    final original = FakeAdapter((_) async => jsonResponse({'ok': true}));
+    final refreshed = FakeAdapter(
+      (_) async => jsonResponse({
+        'data': {'accessToken': 'new', 'refreshToken': 'next'},
+      }),
+    );
+    final (dio, _, sessions) = await fixture(original, refreshed, old: true);
+    // 记录任务发起时的会话，异步完成后再判断结果是否仍可提交。
+    // 捕获任务启动时的账号和版本；await 之后不能直接假设会话仍相同。
+    final captured = sessions.snapshot;
+    await dio.get('/protected');
+    expect(refreshed.calls.length, 1);
+    expect(original.calls.single.headers['Authorization'], 'Bearer new');
+    expect(sessions.isCurrent(captured), isTrue);
+  }, skip: !AppConfig.hasBaseUrl);
 }

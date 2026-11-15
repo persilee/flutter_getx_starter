@@ -18,7 +18,6 @@ class AuthInterceptor extends Interceptor {
   /// 无拦截器的 Dio：刷新不会递归，重放失败可保留真实 Dio 错误。
   final Dio refreshDio;
 
-  /// 认证白名单：登录、刷新等无需附加凭证的路径。
   static List<String> get _whitelist => AppConfig.authWhitelist;
   // extra 中记录发送时的令牌，仅供本地判断是否已有更新凭证，不是发送给后端的请求体。
   static const _requestTokenKey = 'auth.request_token';
@@ -38,6 +37,9 @@ class AuthInterceptor extends Interceptor {
       return;
     }
 
+    // 先等待请求前刷新，再读取最新 token；刷新失败的策略由下面的刷新函数决定。
+    if (tokenStorage.isExpired) await _refreshTokens();
+
     // 在等待刷新之后读取内存凭证，不能继续使用等待前捕获的旧 token。
     final token = tokenStorage.accessToken;
     if (token != null && token.isNotEmpty) {
@@ -48,6 +50,60 @@ class AuthInterceptor extends Interceptor {
     }
     // 继续执行后续请求链；记录日志或处理头信息后不能遗漏此交接。
     handler.next(options);
+  }
+
+  // 请求新凭证，提交前确认原会话仍有效。
+  Future<bool> _refreshTokens() async {
+    // 未配后端时不发 refresh，保留本地假登录会话。
+    if (!AppConfig.hasBaseUrl) return false;
+
+    // 记录任务发起时的会话，异步完成后再判断结果是否仍可提交。
+    // 刷新结果只允许回写这份快照所属的会话，不能覆盖等待期间建立的新登录。
+    final captured = sessionService.snapshot;
+    final refreshToken = tokenStorage.refreshToken;
+    if (!sessionService.isCurrent(captured) ||
+        refreshToken == null ||
+        refreshToken.isEmpty) {
+      return false;
+    }
+
+    try {
+      // 刷新用独立客户端；这里直接处理响应 data，不经过 AuthApi._unwrap 的业务 code 检查。
+      final resp = await refreshDio.post<Map<String, dynamic>>(
+        AppConfig.authRefreshPath,
+        data: {'refreshToken': refreshToken},
+      );
+      // 自动刷新只读取当前约定的 data 信封，类型不符合时返回失败并保留会话。
+      final data = resp.data?['data'];
+      if (data is! Map) return false;
+      final accessToken = data['accessToken'];
+      final nextRefreshToken = data['refreshToken'];
+      // 两种新令牌必须是非空字符串，校验通过后才进入会话更新。
+      if (accessToken is! String ||
+          accessToken.isEmpty ||
+          nextRefreshToken is! String ||
+          nextRefreshToken.isEmpty) {
+        return false;
+      }
+      // 会话服务在写入前后校验 captured，退出或换号后的迟到刷新不能恢复旧账号。
+      return await sessionService.updateCredentials(
+        captured,
+        accessToken: accessToken,
+        refreshToken: nextRefreshToken,
+      );
+    } on DioException catch (error) {
+      // 只有服务端明确拒绝刷新凭证时退出；断网、超时和 5xx 保留会话。
+      final status = error.response?.statusCode;
+      // 只有后端明确拒绝刷新凭证才失效会话；断网、超时与 5xx 不直接退出。
+      if (status == 401 || status == 403) {
+        // 即使收到拒绝响应，也只清理仍匹配这次刷新快照的会话。
+        await sessionService.invalidate(onlyIfCurrent: captured);
+      }
+      return false;
+    } catch (_) {
+      // 响应格式和本地处理异常不等于凭证已失效。
+      return false;
+    }
   }
 
   // 判断请求是否属于无需附加凭证的认证路径。
