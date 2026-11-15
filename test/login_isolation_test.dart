@@ -9,8 +9,10 @@ import 'package:flutter_getx_starter/pages/login/login_controller.dart';
 
 import 'support.dart';
 
+import 'package:dio/dio.dart';
+
 class PendingAuthApi extends AuthApi {
-  PendingAuthApi(this.pending);
+  PendingAuthApi(this.pending) : super(ApiClient(Dio()));
   final Completer<AuthSession> pending;
   @override
   Future<AuthSession> login({
