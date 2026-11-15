@@ -1,6 +1,5 @@
 // 组织本页面布局与交互入口，业务动作交给控制器或服务。
 
-import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -33,22 +32,8 @@ class HomePage extends StatelessWidget {
                 child: Text(TrKeys.switchLanguage.tr),
               ),
               FilledButton(
-                onPressed: () =>
-                    AdaptiveTheme.of(context)
-                        .setThemeMode(AdaptiveThemeMode.light),
-                child: Text(TrKeys.themeLight.tr),
-              ),
-              FilledButton(
-                onPressed: () =>
-                    AdaptiveTheme.of(context)
-                        .setThemeMode(AdaptiveThemeMode.dark),
-                child: Text(TrKeys.themeDark.tr),
-              ),
-              FilledButton(
-                onPressed: () =>
-                    AdaptiveTheme.of(context)
-                        .setThemeMode(AdaptiveThemeMode.system),
-                child: Text(TrKeys.themeSystem.tr),
+                onPressed: () => showThemeModeSheet(context),
+                child: Text(TrKeys.switchTheme.tr),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).push(

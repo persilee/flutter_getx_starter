@@ -24,6 +24,7 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
   int _underline = 0;
   int _bottom = 0;
   String _filter = 'all';
+  bool _failFirst = true;
 
   @override
   void dispose() {
@@ -49,6 +50,38 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
     });
   }
 
+  /// 每次打开都重新计数，可验证首次失败、留在弹窗重试和执行中锁定。
+  Future<void> _confirm() async {
+    var attempts = 0;
+    final failFirst = _failFirst;
+    final result = await AppConfirmDialog.show(
+      context: context,
+      title: '模拟删除',
+      message: '仅测试确认流程，不删除真实数据。',
+      onConfirm: () async {
+        await Future<void>.delayed(const Duration(seconds: 1));
+        if (failFirst && attempts++ == 0) throw Exception('模拟失败');
+      },
+    );
+    _report(result == true ? '确认操作成功' : '已取消确认');
+  }
+
+  Future<void> _sheet() async {
+    final result = await AppBottomSheet.show<String>(
+      context: context,
+      builder: (sheetContext) => AppBottomSheet(
+        title: 'AppBottomSheet',
+        description: '测试键盘、安全区和底部操作',
+        body: const InputWidget(placeholder: '点击输入以查看键盘避让'),
+        footer: PrimaryButton(
+          label: '完成选择',
+          onPressed: () => Navigator.of(sheetContext).pop('已完成面板选择'),
+        ),
+      ),
+    );
+    _report(result ?? '已关闭底部面板');
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(TrKeys.componentStyles.tr)),
@@ -64,6 +97,11 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
         ..._inputs(),
         ..._choices(),
         ..._navigation(),
+        ..._states(),
+        PrimaryButton(
+          label: '切换主题模式',
+          onPressed: () => showThemeModeSheet(context),
+        ),
       ],
     ),
   );
@@ -361,6 +399,58 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
           _feedback = '底部导航：${value + 1}';
         }),
       ),
+    ]),
+  ];
+  List<Widget> _states() => [
+    _section('DialogWidget / AppConfirmDialog', [
+      PrimaryButton(
+        label: '打开普通对话框',
+        onPressed: () => showDialog<void>(
+          context: context,
+          builder: (dialogContext) => DialogWidget(
+            titleString: 'DialogWidget',
+            descriptionString: '检查标题、说明与操作按钮。',
+            onCancel: () {
+              Navigator.of(dialogContext).pop();
+              _report('已取消对话框');
+            },
+            onConfirm: () {
+              Navigator.of(dialogContext).pop();
+              _report('已确认对话框');
+            },
+          ),
+        ),
+      ),
+      CheckboxWidget(
+        title: '确认操作首次失败（可重试）',
+        checked: _failFirst,
+        onChanged: (value) => setState(() => _failFirst = value ?? false),
+      ),
+      AppButton(
+        label: '打开模拟删除确认',
+        variant: AppButtonVariant.destructive,
+        onPressed: _confirm,
+      ),
+    ]),
+    _section('BottomSheetWidget / AppBottomSheet', [
+      GhostButton(
+        label: '打开基础底部面板',
+        onPressed: () => showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          backgroundColor: Colors.transparent,
+          builder: (sheetContext) => BottomSheetWidget(
+            titleString: 'BottomSheetWidget',
+            content: const InputWidget(placeholder: '测试输入与键盘'),
+            onConfirm: () {
+              Navigator.of(sheetContext).pop();
+              _report('已确认基础面板');
+            },
+          ),
+        ),
+      ),
+      PrimaryButton(label: '打开项目底部面板', onPressed: _sheet),
     ]),
   ];
 }
