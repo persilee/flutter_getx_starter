@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../common/index.dart';
+import 'state_demo_page.dart';
 
 /// 公共组件调试目录：直接渲染真实组件，所有操作仅修改页面内的演示状态。
 class ComponentStylesPage extends StatefulWidget {
@@ -25,6 +26,7 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
   int _bottom = 0;
   String _filter = 'all';
   bool _failFirst = true;
+  ResultStatus _status = ResultStatus.idle;
 
   @override
   void dispose() {
@@ -83,10 +85,10 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(TrKeys.componentStyles.tr)),
+  Widget build(BuildContext context) => PageScaffold(
+    topBar: TopBar(title: TrKeys.componentStyles.tr),
     body: ListView(
-      padding: const EdgeInsets.all(AppSpacing.page),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       children: [
         Semantics(liveRegion: true, child: TextWidget.muted(_feedback)),
@@ -101,6 +103,12 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
         PrimaryButton(
           label: '切换主题模式',
           onPressed: () => showThemeModeSheet(context),
+        ),
+        PrimaryButton(
+          label: '打开异步四态示例',
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const StateDemoPage()),
+          ),
         ),
       ],
     ),
@@ -452,5 +460,32 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
       ),
       PrimaryButton(label: '打开项目底部面板', onPressed: _sheet),
     ]),
+    _section('ResultStateCard', [
+      Wrap(
+        spacing: AppSpacing.xs,
+        runSpacing: AppSpacing.xs,
+        children: [
+          for (final status in ResultStatus.values)
+            ButtonWidget.outline(
+              status.name,
+              onTap: () => setState(() => _status = status),
+            ),
+        ],
+      ),
+      ResultStateCard(
+        icon: _status == ResultStatus.error ? Icons.error_outline : Icons.check,
+        title: '当前状态：${_status.name}',
+        desc: '错误状态可点击重试，切换为成功状态。',
+        status: _status,
+        tone: _status == ResultStatus.error
+            ? ResultTone.danger
+            : ResultTone.success,
+        onRetry: () => setState(() {
+          _status = ResultStatus.success;
+          _feedback = '重试成功';
+        }),
+      ),
+    ]),
+    _section('EmptyStateView', [const EmptyStateView(message: '暂无内容，这是空状态示例')]),
   ];
 }
