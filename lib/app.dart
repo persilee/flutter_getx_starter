@@ -27,6 +27,10 @@ class App extends StatelessWidget {
     supportedLocales: AppTranslations.supportedLocales,
     // 本地化
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
+    // 亮色主题
+    theme: AppTheme.lightTheme,
+    // 暗色主题
+    darkTheme: AppTheme.darkTheme,
     // 首页
     home: const HomePage(),
   );
