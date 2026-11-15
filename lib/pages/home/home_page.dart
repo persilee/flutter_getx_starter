@@ -6,6 +6,8 @@ import 'package:get/get.dart';
 import '../../common/index.dart';
 import '../counter/index.dart';
 
+import 'package:adaptive_theme/adaptive_theme.dart';
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
   @override
@@ -28,6 +30,24 @@ class HomePage extends StatelessWidget {
               onPressed: () =>
                   Get.find<LocaleService>().change(const Locale('zh', 'CN')),
               child: Text(TrKeys.switchLanguage.tr),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  AdaptiveTheme.of(context)
+                      .setThemeMode(AdaptiveThemeMode.light),
+              child: Text(TrKeys.themeLight.tr),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  AdaptiveTheme.of(context)
+                      .setThemeMode(AdaptiveThemeMode.dark),
+              child: Text(TrKeys.themeDark.tr),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  AdaptiveTheme.of(context)
+                      .setThemeMode(AdaptiveThemeMode.system),
+              child: Text(TrKeys.themeSystem.tr),
             ),
           ],
         ),

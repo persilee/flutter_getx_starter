@@ -4,3 +4,4 @@ export 'values/index.dart';
 export 'services/index.dart';
 export 'style/index.dart';
 export 'i18n/index.dart';
+export 'extension/index.dart';

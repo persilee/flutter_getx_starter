@@ -5,4 +5,16 @@ abstract final class AppConfig {
     'APP_NAME',
     defaultValue: 'GetX App',
   );
+
+  /// UI 设计稿配置
+  /// [UiConfig.designWidth] 设计稿宽度
+  /// [UiConfig.designHeight] 设计稿高度
+  static const ui = UiConfig(designWidth: 390, designHeight: 844);
+}
+
+class UiConfig {
+  const UiConfig({required this.designWidth, required this.designHeight});
+
+  final double designWidth;
+  final double designHeight;
 }
