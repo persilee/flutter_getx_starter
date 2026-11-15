@@ -3,3 +3,4 @@
 export 'component_styles/index.dart';
 export 'counter/index.dart';
 export 'home/index.dart';
+export 'splash/index.dart';
