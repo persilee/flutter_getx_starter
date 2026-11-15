@@ -19,5 +19,7 @@ class Global {
     Get.put(TokenService(Get.find()));
     Get.put(AppLaunchService(Get.find()));
     Get.put(SessionService(Get.find<TokenService>()));
+    // 按需创建 API，实际使用时从已注册的 NetworkService 获取客户端。
+    Get.lazyPut(() => AuthApi());
   }
 }

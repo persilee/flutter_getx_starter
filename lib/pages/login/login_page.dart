@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../common/index.dart';
 import 'login_controller.dart';
 
-/// 登录页：展示邮箱、密码与校验状态；本节尚未接入 Session 或认证跳转。
+/// 登录页：本节提交成功后由 Page 主动 go 到 Home；下一节才接入 revision 路由守卫。
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -20,32 +20,23 @@ class _LoginPageState extends State<LoginPage> {
   // 页面创建时接入本页面拥有的控制器或资源。
   void initState() {
     super.initState();
-    // 页面创建时注册表单状态，GetBuilder 将读取这个实例。
     Get.put(LoginController());
   }
 
   @override
   // 页面离开时释放本页面拥有的资源，避免重复进入后残留状态。
   void dispose() {
-    // 页面退出时触发 Controller.onClose，释放邮箱和密码文本控制器。
+    // 删除对应依赖并触发其 onClose；页面创建的 PageController 等资源另行释放。
     Get.delete<LoginController>();
     super.dispose();
-  }
-
-  Future<void> _onLogin() async {
-    final passed = await Get.find<LoginController>().submit();
-    if (!passed || !mounted) return;
-    // 本章只体验页面流程；第 6 章再接入本地演示会话。
-    context.go(AppRoutes.home);
   }
 
   @override
   // 根据当前参数与状态构建界面，交互通过回调交给状态拥有者。
   Widget build(BuildContext context) {
     return PageScaffold(
-      // 键盘弹出或屏幕较小时允许滚动，避免提交按钮被内容挤出可视区域。
       scrollable: true,
-      // 只有 update([idForm]) 才触发此表单区域的定向重建。
+      // GetBuilder 读取已注册的 Controller；若指定 id，update 时也要使用同一 id。
       body: GetBuilder<LoginController>(
         id: LoginController.idForm,
         builder: (c) {
@@ -58,40 +49,24 @@ class _LoginPageState extends State<LoginPage> {
                 style: AppTextStyles.displayOn(context),
               ),
               const SizedBox(height: 24),
-              // 复用公共输入框，保持清空交互与主题样式一致。
-              InputWidget(
+              // 原生字段复用统一主题，并保留邮箱键盘与密码遮蔽能力。
+              TextField(
                 controller: c.email,
-                // 选择更适合输入邮箱的键盘，不等于验证邮箱是否合法。
+                // 选择邮箱键盘仅改善输入体验，不会自动校验邮箱格式。
                 keyboardType: TextInputType.emailAddress,
-                placeholder: TrKeys.email.tr,
-              ),
-              // InputWidget 暂无 errorText 参数，由页面展示字段校验结果。
-              if (c.emailError != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  c.emailError!,
-                  style: AppTextStyles.caption.copyWith(
-                    color: context.appErrorText,
-                  ),
+                decoration: InputDecoration(
+                  labelText: TrKeys.email.tr,
+                  // 邮箱错误在字段下展示；Controller 更新表单区域后才反映新结果。
+                  errorText: c.emailError,
                 ),
-              ],
+              ),
               const SizedBox(height: 16),
               InputWidget(
+                // 复用公共密码组件的显隐能力；此示例未绑定 passwordError 的展示区域。
                 controller: c.password,
-                // 复用组件内置的密码遮蔽与显隐按钮。
                 obscureText: true,
                 placeholder: TrKeys.password.tr,
               ),
-              if (c.passwordError != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  c.passwordError!,
-                  style: AppTextStyles.caption.copyWith(
-                    color: context.appErrorText,
-                  ),
-                ),
-              ],
-              // 集合 if 与展开运算符 ... 按条件插入间距和整体错误组件。
               if (c.formError != null) ...[
                 const SizedBox(height: 12),
                 Text(
@@ -105,7 +80,13 @@ class _LoginPageState extends State<LoginPage> {
               PrimaryButton(
                 label: TrKeys.loginAction.tr,
                 loading: c.loading,
-                onPressed: _onLogin,
+                onPressed: () async {
+                  // 等待 Controller 完成校验与会话保存；返回 false 时留在当前页。
+                  final ok = await c.submit();
+                  // 等待期间页面可能已销毁；确认仍挂载且提交成功后才可导航。
+                  if (!context.mounted || !ok) return;
+                  context.go(AppRoutes.home);
+                },
               ),
             ],
           );
