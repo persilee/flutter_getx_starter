@@ -43,8 +43,8 @@ class _WelcomePageState extends State<WelcomePage> {
     // 保存失败留在引导页；等待期间已离开页面时也不能继续导航。
     if (!ok || !mounted) return;
     // go 切换到下一流程的路由配置，不把 Splash 作为 push 的上一页保留。
-    // 本节引导完成进入首页；go 切换流程，不把 Welcome 留作上一页。
-    context.go(AppRoutes.home);
+    // 本节新增 Login 后，引导结束改为进入登录页；此处不建立登录会话。
+    context.go(AppRoutes.login);
   }
 
   @override

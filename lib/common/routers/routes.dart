@@ -7,4 +7,5 @@ abstract final class AppRoutes {
   static const componentStyles = '/component-styles';
   static const splash = '/splash';
   static const welcome = '/welcome';
+  static const login = '/login';
 }

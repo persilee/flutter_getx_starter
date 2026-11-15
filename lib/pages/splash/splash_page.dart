@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../common/index.dart';
 import 'splash_controller.dart';
 
-/// 启动页：首帧显示应用名后停留 0.5 秒，按引导标记分流：已完成进入首页，未完成进入 Welcome。
+/// 启动页：首帧显示应用名后停留 0.5 秒，按引导标记分流：已完成进入 Login，未完成进入 Welcome。
 ///
 /// Get.put / Get.delete 配对。跳转只用 context.go。
 class SplashPage extends StatefulWidget {
@@ -48,7 +48,7 @@ class _SplashPageState extends State<SplashPage> {
     super.dispose();
   }
 
-  /// 按引导标记分流：已完成进入首页，未完成进入 Welcome。
+  /// 按引导标记分流：已完成进入 Login，未完成进入 Welcome。
   void _goNext() {
     // 再次检查页面是否仍在树中，安全使用下面的 BuildContext。
     if (!mounted) return;
@@ -56,7 +56,7 @@ class _SplashPageState extends State<SplashPage> {
     context.go(
       // 读取已恢复的引导标记；这里只判断引导状态，不判断认证状态。
       Get.find<AppLaunchService>().hasSeenWelcome
-          ? AppRoutes.home
+          ? AppRoutes.login
           : AppRoutes.welcome,
     );
   }

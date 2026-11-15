@@ -24,6 +24,7 @@ class AppRouter {
       ),
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashPage()),
       GoRoute(path: AppRoutes.welcome, builder: (_, _) => const WelcomePage()),
+      GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginPage()),
     ],
   );
 }

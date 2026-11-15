@@ -10,6 +10,10 @@ abstract final class AppConfig {
   /// [UiConfig.designWidth] 设计稿宽度
   /// [UiConfig.designHeight] 设计稿高度
   static const ui = UiConfig(designWidth: 390, designHeight: 844);
+
+  /// 仅用于表单演示预填，不代表真实后端账号或认证成功。
+  static const demoEmail = '';
+  static const demoPassword = '';
 }
 
 class UiConfig {
