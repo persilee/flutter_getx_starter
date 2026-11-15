@@ -1,0 +1,5 @@
+{
+  "APP_NAME": "CourseApp",
+  "BASE_URL": "https://api.example.com",
+  "ENABLE_HTTP_LOG": false
+}

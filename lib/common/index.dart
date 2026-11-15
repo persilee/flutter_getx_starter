@@ -7,6 +7,7 @@ export 'i18n/index.dart';
 export 'models/index.dart';
 export 'widgets/index.dart';
 export 'components/index.dart';
+export 'network/index.dart';
 export 'api/index.dart';
 export 'utils/index.dart';
 export 'extension/index.dart';

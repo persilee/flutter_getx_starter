@@ -8,7 +8,7 @@
       "name": "flutter_getx_starter",
       "request": "launch",
       "type": "dart",
-      "toolArgs": ["--dart-define=APP_NAME=Flutter Getx Demo"]
+      "toolArgs": ["--dart-define-from-file=config/dev.json"]
     },
     {
       "name": "flutter_getx_starter (profile mode)",
