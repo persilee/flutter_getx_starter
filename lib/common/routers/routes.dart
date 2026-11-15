@@ -6,4 +6,5 @@ abstract final class AppRoutes {
   static const counter = '/counter';
   static const componentStyles = '/component-styles';
   static const splash = '/splash';
+  static const welcome = '/welcome';
 }

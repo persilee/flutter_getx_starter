@@ -23,6 +23,7 @@ class AppRouter {
         builder: (_, _) => const ComponentStylesPage(),
       ),
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashPage()),
+      GoRoute(path: AppRoutes.welcome, builder: (_, _) => const WelcomePage()),
     ],
   );
 }
