@@ -16,8 +16,11 @@ class App extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     // 翻译
     translations: AppTranslations(),
-    // 语言
-    locale: AppTranslations.fallbackLocale,
+    // 当前语言
+    // 如果 LocaleService 已注册，则使用 LocaleService 的 locale，否则使用回退语言
+    locale: Get.isRegistered<LocaleService>()
+        ? Get.find<LocaleService>().locale
+        : AppTranslations.fallbackLocale,
     // 回退语言
     fallbackLocale: AppTranslations.fallbackLocale,
     // 支持的语言

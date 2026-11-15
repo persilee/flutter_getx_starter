@@ -8,5 +8,6 @@ class Global {
   // 完成当前模块的初始化，准备后续调用所需的依赖或状态。
   static Future<void> init() async {
     await Get.putAsync(() => StorageService().init());
+    await Get.putAsync(() => LocaleService(Get.find()).init());
   }
 }

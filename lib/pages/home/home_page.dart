@@ -25,7 +25,8 @@ class HomePage extends StatelessWidget {
               child: Text(TrKeys.openCounter.tr),
             ),
             FilledButton(
-              onPressed: () => Get.updateLocale(const Locale('zh', 'CN')),
+              onPressed: () =>
+                  Get.find<LocaleService>().change(const Locale('zh', 'CN')),
               child: Text(TrKeys.switchLanguage.tr),
             ),
           ],
