@@ -14,6 +14,18 @@ class ComponentStylesPage extends StatefulWidget {
 class _ComponentStylesPageState extends State<ComponentStylesPage> {
   bool _loading = false;
   String _feedback = '点击组件查看交互结果';
+  final _formKey = GlobalKey<FormState>();
+  final _name = TextEditingController();
+  final _password = TextEditingController();
+  final _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _password.dispose();
+    _search.dispose();
+    super.dispose();
+  }
 
   void _report(String message) {
     if (mounted) setState(() => _feedback = message);
@@ -43,6 +55,7 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
         ..._basics(context),
         ..._buttons(),
         ..._cards(),
+        ..._inputs(),
       ],
     ),
   );
@@ -211,6 +224,53 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
             onTap: () => _report('点击设置项 B'),
           ),
         ],
+      ),
+    ]),
+  ];
+  List<Widget> _inputs() => [
+    _section('InputWidget / GlassSearchField', [
+      InputWidget(
+        controller: _password,
+        placeholder: '密码：支持显隐与清空',
+        obscureText: true,
+      ),
+      GlassSearchField(
+        controller: _search,
+        hintText: '输入搜索内容',
+        onChanged: (value) => _report('搜索内容：$value'),
+      ),
+    ]),
+    _section('AppFormField / InputFormFieldWidget', [
+      const AppFormField(label: '只读状态', hint: '此处不可编辑', readOnly: true),
+      const AppFormField(
+        label: '错误状态',
+        hint: '输入内容',
+        errorText: '这是错误样式示例',
+        helper: '辅助说明',
+      ),
+      Form(
+        key: _formKey,
+        child: InputFormFieldWidget(
+          controller: _name,
+          labelText: '名称（必填）',
+          placeholder: '至少输入两个字符',
+          validator: (value) =>
+              (value?.trim().length ?? 0) < 2 ? '名称至少需要两个字符' : null,
+        ),
+      ),
+      PrimaryButton(
+        label: '校验表单',
+        onPressed: () =>
+            _report(_formKey.currentState!.validate() ? '表单校验通过' : '请修正表单错误'),
+      ),
+      GhostButton(
+        label: '重置表单',
+        onPressed: () {
+          _formKey.currentState!.reset();
+          // 外部控制器在重建后可能成为新的初值，显式清空演示输入。
+          _name.clear();
+          _report('表单已重置');
+        },
       ),
     ]),
   ];
