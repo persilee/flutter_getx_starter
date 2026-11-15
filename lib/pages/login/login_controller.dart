@@ -33,20 +33,27 @@ class LoginController extends GetxController {
 
     loading = true;
     update([idForm]);
+    final sessions = Get.find<SessionService>();
+    // 记录任务发起时的会话，异步完成后再判断结果是否仍可提交。
+    // 捕获任务启动时的账号和版本；await 之后不能直接假设会话仍相同。
+    final captured = sessions.snapshot;
     try {
       // 认证协议交给 AuthApi；Controller 负责表单状态与后续会话建立。
       final session = await Get.find<AuthApi>().login(
         email: email.text.trim(),
         password: password.text,
       );
-      // 由会话服务统一保存凭证并更新身份信号，页面不逐项写 token。
-      await Get.find<SessionService>().establish(
+      // 登录可能从无会话开始，比较完整快照，不使用要求已登录的 isCurrent。
+      if (isClosed || sessions.snapshot != captured) return false;
+      await sessions.establish(
         userId: session.user.id,
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,
       );
       return true;
     } catch (error) {
+      // 页面已关闭或会话已改变时丢弃迟到结果。
+      if (isClosed || sessions.snapshot != captured) return false;
       formError = userFacingErrorMessage(
         error,
         fallback: TrKeys.loginFailed.tr,
@@ -54,7 +61,7 @@ class LoginController extends GetxController {
       return false;
     } finally {
       loading = false;
-      update([idForm]);
+      if (!isClosed) update([idForm]);
     }
   }
 
