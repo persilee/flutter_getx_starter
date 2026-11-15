@@ -1,6 +1,7 @@
 // 封装可复用界面组件，通过参数和回调接入页面。
 
 // 表面组件：统一玻璃背景、模糊、边框、裁切和阴影。
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
@@ -67,6 +68,24 @@ class GlassSurface extends StatelessWidget {
       // 让ListTile和InkWell在表面上方绘制交互反馈，不被玻璃背景盖住。
       child: Material(type: MaterialType.transparency, child: child),
     );
+
+    if (enableBlur && glassEnabled) {
+      content = ClipRRect(
+        borderRadius: radius,
+        clipBehavior: clipBehavior,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          child: content,
+        ),
+      );
+    } else if (radius != BorderRadius.zero) {
+      // 关 blur 时仍裁圆角，避免子组件画出圆角外。
+      content = ClipRRect(
+        borderRadius: radius,
+        clipBehavior: clipBehavior,
+        child: content,
+      );
+    }
 
     if (boxShadow case final List<BoxShadow> shadows when shadows.isNotEmpty) {
       return DecoratedBox(

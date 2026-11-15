@@ -42,6 +42,7 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
         const SizedBox(height: AppSpacing.md),
         ..._basics(context),
         ..._buttons(),
+        ..._cards(),
       ],
     ),
   );
@@ -53,7 +54,7 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.sm,
       children: [
-        TextWidget(text: title, type: TextWidgetType.values.first),
+        SectionHeader(title: title),
         ...children,
       ],
     ),
@@ -164,6 +165,51 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
             onPressed: () => _report('点击玻璃图标按钮'),
           ),
           TopBarAction(label: '保存', onPressed: () => _report('点击顶部保存')),
+        ],
+      ),
+    ]),
+  ];
+  List<Widget> _cards() => [
+    _section('GlassSurface / GlassCard / StatCard', [
+      GlassSurface(
+        enableBlur: true,
+        padding: const EdgeInsets.all(AppSpacing.card),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        child: const TextWidget.body('玻璃表面：跟随当前主题'),
+      ),
+      GlassCard(
+        // 使用规范卡片留白，文字与点击反馈共用完整的卡片区域。
+        padding: const EdgeInsets.all(AppSpacing.card),
+        child: const TextWidget.body('可点击卡片'),
+        onTap: () => _report('点击 GlassCard'),
+      ),
+      const StatCard(value: '128', label: '演示统计'),
+    ]),
+    _section('ListTileWidget / ListRowCard', [
+      ListTileWidget(
+        title: const TextWidget.body('基础列表项'),
+        subtitle: const TextWidget.muted('支持点击和长按'),
+        onTap: () => _report('点击基础列表项'),
+        onLongPress: () => _report('长按基础列表项'),
+      ),
+      ListRowCard(
+        title: '项目列表卡片',
+        subtitle: '标题、说明、尾部与底部内容',
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _report('点击 ListRowCard'),
+      ),
+      SettingsGroup(
+        children: [
+          SettingsTile(
+            label: '设置项 A',
+            leading: const Icon(Icons.settings_outlined),
+            onTap: () => _report('点击设置项 A'),
+          ),
+          SettingsTile(
+            label: '设置项 B',
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _report('点击设置项 B'),
+          ),
         ],
       ),
     ]),
