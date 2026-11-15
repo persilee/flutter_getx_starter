@@ -24,6 +24,10 @@ class AuthInterceptor extends Interceptor {
   // 记录请求所属会话；旧账号请求的迟到错误不能改变当前账号。
   static const _requestSessionKey = 'auth.request_session';
 
+  // 共享中的刷新任务；同一拦截器内的并发请求等待此 Future。
+  // 每个来源有独立拦截器，这个字段不是所有来源共同的全局锁。
+  Future<bool>? _refreshFuture;
+
   @override
   // 在请求出站前处理参数或凭证，并交给后续请求链。
   Future<void> onRequest(
@@ -37,8 +41,14 @@ class AuthInterceptor extends Interceptor {
       return;
     }
 
-    // 先等待请求前刷新，再读取最新 token；刷新失败的策略由下面的刷新函数决定。
-    if (tokenStorage.isExpired) await _refreshTokens();
+    // 先查看是否已有刷新任务；已有任务时复用，避免继续携带旧凭证出站。
+    final activeRefresh = _refreshFuture;
+    if (activeRefresh != null) {
+      // 401 已触发刷新时，后续请求先等待，避免继续携带旧凭证出站。
+      await activeRefresh;
+    } else if (tokenStorage.isExpired) {
+      await _sharedRefresh();
+    }
 
     // 在等待刷新之后读取内存凭证，不能继续使用等待前捕获的旧 token。
     final token = tokenStorage.accessToken;
@@ -50,6 +60,20 @@ class AuthInterceptor extends Interceptor {
     }
     // 继续执行后续请求链；记录日志或处理头信息后不能遗漏此交接。
     handler.next(options);
+  }
+
+  /// 所有并发调用等待同一个 Future；完成后释放以允许后续显式重试。
+  Future<bool> _sharedRefresh() {
+    // 已有任务就返回同一个 Future，多个调用者不会分别启动刷新。
+    final active = _refreshFuture;
+    if (active != null) return active;
+    // 仅首个调用创建刷新任务并保存，其余调用复用该引用。
+    final created = _refreshTokens();
+    _refreshFuture = created;
+    return created.whenComplete(() {
+      // 仅清理自己创建的任务引用，避免已完成的旧任务误清除后来启动的新任务。
+      if (identical(_refreshFuture, created)) _refreshFuture = null;
+    });
   }
 
   // 请求新凭证，提交前确认原会话仍有效。

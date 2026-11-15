@@ -1,6 +1,7 @@
 // 用受控数据验证凭证注入、刷新与重放。
 
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -68,5 +69,31 @@ void main() {
     expect(refreshed.calls.length, 1);
     expect(original.calls.single.headers['Authorization'], 'Bearer new');
     expect(sessions.isCurrent(captured), isTrue);
+  }, skip: !AppConfig.hasBaseUrl);
+  test('并发等待一次共享刷新', () async {
+    // gate 人工控制异步结束时机；先让请求挂起，再制造并发或退出场景。
+    final gate = Completer<void>();
+    // started 标记请求已进入适配器；等待此信号后再退出，避免依赖不稳定的延时。
+    final started = Completer<void>();
+    final original = FakeAdapter((_) async => jsonResponse({'ok': true}));
+    final refreshed = FakeAdapter((_) async {
+      if (!started.isCompleted) started.complete();
+      // 在此挂起受控响应，测试通过 gate.complete() 决定何时返回数据。
+      await gate.future;
+      return jsonResponse({
+        'data': {'accessToken': 'new', 'refreshToken': 'next'},
+      });
+    });
+    final (dio, _, _) = await fixture(original, refreshed, old: true);
+    // 同时发起多次受保护请求，验证它们是否共享一次刷新，而非分别刷新。
+    final tasks = List.generate(5, (_) => dio.get('/protected'));
+    // 确认异步操作确实已经开始后才继续改变会话或释放响应。
+    await started.future;
+    // 释放挂起的操作，模拟服务器结果在并发请求或退出之后才返回。
+    gate.complete();
+    // 等待所有并发请求结束，再统计实际刷新次数与业务请求次数。
+    await Future.wait(tasks);
+    expect(refreshed.calls.length, 1);
+    expect(original.calls.length, 5);
   }, skip: !AppConfig.hasBaseUrl);
 }
