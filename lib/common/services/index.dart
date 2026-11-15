@@ -3,3 +3,4 @@
 export 'app_launch_service.dart';
 export 'locale_service.dart';
 export 'storage_service.dart';
+export 'token_service.dart';
