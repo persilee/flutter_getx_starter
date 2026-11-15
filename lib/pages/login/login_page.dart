@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../common/index.dart';
 import 'login_controller.dart';
@@ -29,6 +30,13 @@ class _LoginPageState extends State<LoginPage> {
     // 页面退出时触发 Controller.onClose，释放邮箱和密码文本控制器。
     Get.delete<LoginController>();
     super.dispose();
+  }
+
+  Future<void> _onLogin() async {
+    final passed = await Get.find<LoginController>().submit();
+    if (!passed || !mounted) return;
+    // 本章只体验页面流程；第 6 章再接入本地演示会话。
+    context.go(AppRoutes.home);
   }
 
   @override
@@ -97,8 +105,7 @@ class _LoginPageState extends State<LoginPage> {
               PrimaryButton(
                 label: TrKeys.loginAction.tr,
                 loading: c.loading,
-                // 按钮只触发 Controller 校验；本节返回 false，不跳转也不伪造认证成功。
-                onPressed: c.submit,
+                onPressed: _onLogin,
               ),
             ],
           );

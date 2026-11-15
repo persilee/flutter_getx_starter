@@ -21,7 +21,7 @@ class LoginController extends GetxController {
   String? formError;
   bool loading = false;
 
-  /// 返回值预留给后续提交流程；本节无认证请求，始终返回 false。
+  /// 本节无认证请求；true 仅表示校验通过，允许进入 Home 体验页面。
   Future<bool> submit() async {
     // 防止加载期间重复提交；后续接入异步请求时仍复用这道入口判断。
     if (loading) return false;
@@ -41,8 +41,10 @@ class LoginController extends GetxController {
     update([idForm]);
     try {
       // 当前只搭好提交状态骨架，没有调用 API 或建立会话。
-      // 非空校验通过也不等于登录成功，后续课节才替换这里。
-      return false;
+      // 非空校验通过后允许 Page 导航到 Home，不代表认证成功。
+      // return false;
+
+      return true;
     } catch (error) {
       // 预留提交异常处理；本节 try 内没有请求，通常不会进入此分支。
       formError = TrKeys.loginFailed.tr;
