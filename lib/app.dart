@@ -1,4 +1,4 @@
-// 应用根组件：接入自适应主题、多语言和首页。
+// 装配根组件，将当前已经完成的主题、翻译与导航接入应用。
 
 import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
@@ -7,50 +7,46 @@ import 'package:get/get.dart';
 
 import 'common/index.dart';
 import 'global.dart';
-import 'pages/index.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
-
   @override
+  // 根据当前参数与状态构建界面，交互通过回调交给状态拥有者。
   Widget build(BuildContext context) => AdaptiveTheme(
-    // 浅色主题
+    // AdaptiveTheme 提供两套主题，切换时将当前主题传给内层应用。
     light: AppTheme.lightTheme,
-    // 深色主题
     dark: AppTheme.darkTheme,
-    // 优先用上次保存的主题，没有则跟随系统
+    // 优先恢复持久化的主题模式；没有记录时跟随系统。
     initial: Global.savedThemeMode ?? AdaptiveThemeMode.system,
-    builder: (theme, darkTheme) => GetMaterialApp(
+    // GetX 继续负责翻译和依赖；.router 构造方式把导航交给 go_router。
+    builder: (theme, darkTheme) => GetMaterialApp.router(
       title: AppConfig.appName,
-      // 去掉右上角 debug 角标
       debugShowCheckedModeBanner: false,
-
-      // 文案表
       translations: AppTranslations(),
-      // 已注册语言服务则用其语言，否则回退英文
+      // 读取初始化后的语言服务；未注册时使用回退语言，避免 Get.find 抛错。
       locale: Get.isRegistered<LocaleService>()
           ? Get.find<LocaleService>().locale
           : AppTranslations.fallbackLocale,
-      // 找不到翻译时的兜底语言
       fallbackLocale: AppTranslations.fallbackLocale,
-      // 声明支持的语言，供系统本地化组件使用
       supportedLocales: AppTranslations.supportedLocales,
-      // Material 组件的系统文案（日期、对话框等）
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      // 浅色主题
       theme: theme,
-      // 深色主题
       darkTheme: darkTheme,
-      // UI 适配
+      // 这是应用内容的构建回调；使用这里的约束初始化尺寸适配。
       builder: (context, child) {
         ScreenUtil.init(
           context,
           designSize: Size(AppConfig.ui.designWidth, AppConfig.ui.designHeight),
         );
+        // 必须保留路由生成的 child，否则路由虽已匹配，页面也不会显示。
         return child ?? const SizedBox.shrink();
       },
-      // 启动页
-      home: const HomePage(),
+      // 以下四项来自同一个 GoRouter，分别负责页面栈、地址解析、
+      // 地址变化通知和返回事件分发，不能混用其他路由实例。
+      routerDelegate: AppRouter.router.routerDelegate,
+      routeInformationParser: AppRouter.router.routeInformationParser,
+      routeInformationProvider: AppRouter.router.routeInformationProvider,
+      backButtonDispatcher: AppRouter.router.backButtonDispatcher,
     ),
   );
 }
