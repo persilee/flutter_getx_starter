@@ -18,6 +18,12 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
   final _name = TextEditingController();
   final _password = TextEditingController();
   final _search = TextEditingController();
+  bool _checked = false;
+  bool _blur = true;
+  int _tab = 0;
+  int _underline = 0;
+  int _bottom = 0;
+  String _filter = 'all';
 
   @override
   void dispose() {
@@ -56,6 +62,8 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
         ..._buttons(),
         ..._cards(),
         ..._inputs(),
+        ..._choices(),
+        ..._navigation(),
       ],
     ),
   );
@@ -184,8 +192,13 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
   ];
   List<Widget> _cards() => [
     _section('GlassSurface / GlassCard / StatCard', [
+      CheckboxWidget(
+        title: '启用示例模糊',
+        checked: _blur,
+        onChanged: (value) => setState(() => _blur = value ?? false),
+      ),
       GlassSurface(
-        enableBlur: true,
+        enableBlur: _blur,
         padding: const EdgeInsets.all(AppSpacing.card),
         borderRadius: BorderRadius.circular(AppRadius.card),
         child: const TextWidget.body('玻璃表面：跟随当前主题'),
@@ -209,6 +222,7 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
         title: '项目列表卡片',
         subtitle: '标题、说明、尾部与底部内容',
         trailing: const Icon(Icons.chevron_right),
+        footer: const AppCategoryChip(label: '示例分类'),
         onTap: () => _report('点击 ListRowCard'),
       ),
       SettingsGroup(
@@ -271,6 +285,81 @@ class _ComponentStylesPageState extends State<ComponentStylesPage> {
           _name.clear();
           _report('表单已重置');
         },
+      ),
+    ]),
+  ];
+  List<Widget> _choices() => [
+    _section('CheckboxWidget', [
+      CheckboxWidget(
+        title: '接收提醒',
+        description: '点击整行测试选中状态',
+        checked: _checked,
+        onChanged: (value) => setState(() => _checked = value ?? false),
+      ),
+      const CheckboxWidget(title: '禁用复选框', checked: true),
+    ]),
+  ];
+  List<Widget> _navigation() => [
+    _section('AppCategoryChip / FilterChipRow', [
+      const Wrap(
+        spacing: AppSpacing.xs,
+        runSpacing: AppSpacing.xs,
+        children: [
+          AppCategoryChip(label: '默认'),
+          AppCategoryChip(label: '已选中', selected: true, showDot: false),
+          AppCategoryChip(label: '成功色', color: AppColors.success),
+        ],
+      ),
+      FilterChipRow(
+        items: const [
+          FilterChipItem(value: 'all', label: '全部'),
+          FilterChipItem(value: 'unread', label: '未读'),
+        ],
+        selectedValue: _filter,
+        onSelected: (value) => setState(() {
+          _filter = value;
+          _feedback = '筛选：$value';
+        }),
+      ),
+    ]),
+    _section('SegmentedTabs / UnderlineTabs', [
+      SegmentedTabs(
+        labels: const ['视频', '频道'],
+        selectedIndex: _tab,
+        onChanged: (value) => setState(() => _tab = value),
+      ),
+      TextWidget.body('当前分段：${_tab == 0 ? '视频' : '频道'}'),
+      UnderlineTabs(
+        labels: const ['未读', '收藏', '稍后'],
+        selectedIndex: _underline,
+        onChanged: (value) => setState(() => _underline = value),
+      ),
+      TextWidget.body('当前下划线选项：${_underline + 1}'),
+    ]),
+    _section('TopBar / SectionHeader / AppBottomTabBar', [
+      TopBar(
+        title: '示例导航栏',
+        onBack: () => _report('点击示例返回'),
+        trailing: [TopBarAction(label: '编辑', onPressed: () => _report('点击编辑'))],
+      ),
+      AppBottomTabBar(
+        items: const [
+          AppBottomTabBarItem(
+            icon: Icons.home_outlined,
+            activeIcon: Icons.home,
+            label: '首页',
+          ),
+          AppBottomTabBarItem(
+            icon: Icons.person_outline,
+            activeIcon: Icons.person,
+            label: '我的',
+          ),
+        ],
+        activeIndex: _bottom,
+        onChanged: (value) => setState(() {
+          _bottom = value;
+          _feedback = '底部导航：${value + 1}';
+        }),
       ),
     ]),
   ];

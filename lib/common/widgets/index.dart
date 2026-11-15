@@ -2,11 +2,14 @@
 
 export 'button.dart';
 export 'card.dart';
+export 'checkbox.dart';
+export 'chip.dart';
 export 'form/index.dart';
 export 'header.dart';
 export 'icon.dart';
 export 'input.dart';
 export 'list_tile.dart';
 export 'surface.dart';
+export 'tabs.dart';
 export 'text.dart';
 export 'widget_scale.dart';
