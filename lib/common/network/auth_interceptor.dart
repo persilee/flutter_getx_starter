@@ -1,7 +1,10 @@
 // 封装请求链中的独立职责，由网络客户端统一装配。
 
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 
+import '../models/index.dart';
 import '../services/index.dart';
 import '../values/index.dart';
 
@@ -23,6 +26,8 @@ class AuthInterceptor extends Interceptor {
   static const _requestTokenKey = 'auth.request_token';
   // 记录请求所属会话；旧账号请求的迟到错误不能改变当前账号。
   static const _requestSessionKey = 'auth.request_session';
+  // 重放标记限制同一请求最多自动重试一次，避免无限刷新与重放。
+  static const _retriedKey = 'auth.retried';
 
   // 共享中的刷新任务；同一拦截器内的并发请求等待此 Future。
   // 每个来源有独立拦截器，这个字段不是所有来源共同的全局锁。
@@ -60,6 +65,74 @@ class AuthInterceptor extends Interceptor {
     }
     // 继续执行后续请求链；记录日志或处理头信息后不能遗漏此交接。
     handler.next(options);
+  }
+
+  @override
+  // 按异常类型处理失败，再将结果交给调用方。
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
+    final options = err.requestOptions;
+    // 读取这次原请求的会话快照，决定迟到的 401 是否仍属于当前登录。
+    final requestSession = options.extra[_requestSessionKey];
+    // 只有当前会话的首次非白名单 401 才考虑刷新；其余错误继续交给后续处理。
+    if (err.response?.statusCode != 401 ||
+        _isWhitelisted(options.path) ||
+        options.extra[_retriedKey] == true ||
+        requestSession is! SessionSnapshot ||
+        !sessionService.isCurrent(requestSession)) {
+      handler.next(err);
+      return;
+    }
+
+    final requestToken = options.extra[_requestTokenKey] as String?;
+    final currentToken = tokenStorage.accessToken;
+    // 若等待过程中别的请求已经更新 token，直接用新值重放，省去重复刷新。
+    final canUseNewToken =
+        requestToken != null &&
+        currentToken != null &&
+        currentToken.isNotEmpty &&
+        requestToken != currentToken;
+    // || 会短路：已有新令牌时不调用刷新，否则等待共享刷新任务。
+    final ready = canUseNewToken || await _sharedRefresh();
+    // 刷新未准备好，或请求体无法安全重放时，保留原失败结果。
+    if (!ready || !_isReplayable(options.data)) {
+      handler.next(err);
+      return;
+    }
+
+    final retryToken = tokenStorage.accessToken;
+    if (retryToken == null || retryToken.isEmpty) {
+      handler.next(err);
+      return;
+    }
+
+    try {
+      // 用无拦截器客户端发送原请求的副本，避免再次进入同一鉴权重试链。
+      final retried = await refreshDio.fetch<dynamic>(
+        options.copyWith(
+          // 保留原请求头并覆盖 Bearer；不重新拼装路径、方法或业务参数。
+          headers: {...options.headers, 'Authorization': 'Bearer $retryToken'},
+          // 复制原元数据并标记已重试；原请求对象不需要原地修改。
+          extra: {...options.extra, _retriedKey: true},
+        ),
+      );
+      // 重放成功后用新响应完成原调用，业务层看到的是重放结果。
+      handler.resolve(retried);
+    } on DioException catch (retryError) {
+      // 返回重放的真实错误，避免用首次 401 掩盖后续故障。
+      // 重放失败要返回重放时的实际错误，例如 503，不能继续返回最初的 401。
+      handler.next(retryError);
+    } catch (retryError) {
+      handler.next(
+        DioException(
+          requestOptions: options,
+          error: retryError,
+          message: retryError.toString(),
+        ),
+      );
+    }
   }
 
   /// 所有并发调用等待同一个 Future；完成后释放以允许后续显式重试。
@@ -129,6 +202,10 @@ class AuthInterceptor extends Interceptor {
       return false;
     }
   }
+
+  /// FormData 和流可能已被消费，不进行无法保证一致性的自动重放。
+  // FormData 或 Stream 可能已被消费，自动再次发送无法保证请求内容一致。
+  bool _isReplayable(Object? data) => data is! FormData && data is! Stream;
 
   // 判断请求是否属于无需附加凭证的认证路径。
   bool _isWhitelisted(String path) =>

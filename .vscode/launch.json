@@ -21,6 +21,34 @@
       "request": "launch",
       "type": "dart",
       "flutterMode": "release"
+    },
+    {
+      "name": "鉴权测试（受控后端）",
+      "type": "dart",
+      "request": "launch",
+      "program": "test/auth_interceptor_test.dart",
+      "toolArgs": [
+        "--dart-define=BASE_URL=https://controlled.test",
+        "--dart-define=ENABLE_HTTP_LOG=false"
+      ]
+    },
+    {
+      "name": "全部测试（受控后端）",
+      "type": "dart",
+      "request": "launch",
+      "program": "test",
+      "toolArgs": [
+        "--dart-define=BASE_URL=https://controlled.test",
+        "--dart-define=ENABLE_HTTP_LOG=false"
+      ]
+    },
+    {
+      "name": "应用演示（无后端）",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": ["--dart-define=BASE_URL="]
     }
   ]
 }
