@@ -5,16 +5,42 @@ import 'package:go_router/go_router.dart';
 import '../../pages/index.dart';
 import 'routes.dart';
 
-// 路由表集中在这里，页面只引用路径常量，不各自创建 GoRouter。
-// 本章尚无 redirect 登录守卫；注册路径仅表示该页面可以被导航访问。
+import 'package:get/get.dart';
+
+import '../services/index.dart';
+
 class AppRouter {
-  // static final 在首次访问时创建一个路由实例，后续构建复用它。
-  // 不要在 build 中反复创建，否则导航状态可能随重建丢失。
   static final router = GoRouter(
-    // 默认启动位置；Web 外部传入的地址也可能影响实际初始位置。
+    // 启动页
     initialLocation: AppRoutes.splash,
-    // 每个 GoRoute 把路径映射为页面；builder 的两个 _ 表示暂不使用 context 和 state。
-    // 只注册当前已完成的页面，避免依赖后续课节尚未创建的类型。
+    // 监听身份变化后重新判定路由，登录和退出不需要每个按钮都手动跳页。
+    refreshListenable: Get.find<SessionService>().revision,
+    // 按下面的判断顺序分流；返回 null 表示放行，返回路径表示改去另一个页面。
+    redirect: (context, state) {
+      final path = state.matchedLocation;
+      // 先放行 Splash，让启动页完成首帧展示与延迟分流。
+      if (path == AppRoutes.splash) {
+        return null;
+      }
+      final seen = Get.find<AppLaunchService>().hasSeenWelcome;
+      final logged = Get.find<SessionService>().isLogin;
+      // 未完成引导优先进入 Welcome；已在 Welcome 时返回 null，避免自我重定向。
+      if (!seen) {
+        return path == AppRoutes.welcome ? null : AppRoutes.welcome;
+      }
+      if (path == AppRoutes.welcome) {
+        return logged ? AppRoutes.home : AppRoutes.login;
+      }
+      // 引导完成后才检查登录态；未登录只能停留在 Login，其他注册页面仍受守卫约束。
+      if (!logged) {
+        return path == AppRoutes.login ? null : AppRoutes.login;
+      }
+      // 已登录用户无需继续停在登录页；切回 Home 完成流程。
+      if (path == AppRoutes.login) {
+        return AppRoutes.home;
+      }
+      return null;
+    },
     routes: [
       GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage()),
       GoRoute(path: AppRoutes.counter, builder: (_, _) => const CounterPage()),

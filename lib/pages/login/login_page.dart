@@ -2,12 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../common/index.dart';
 import 'login_controller.dart';
 
-/// 登录页：本节提交成功后由 Page 主动 go 到 Home；下一节才接入 revision 路由守卫。
+/// 登录页：邮箱 + 密码。成功后靠 Session revision 进 Home。
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -80,13 +79,8 @@ class _LoginPageState extends State<LoginPage> {
               PrimaryButton(
                 label: TrKeys.loginAction.tr,
                 loading: c.loading,
-                onPressed: () async {
-                  // 等待 Controller 完成校验与会话保存；返回 false 时留在当前页。
-                  final ok = await c.submit();
-                  // 等待期间页面可能已销毁；确认仍挂载且提交成功后才可导航。
-                  if (!context.mounted || !ok) return;
-                  context.go(AppRoutes.home);
-                },
+                // 由 Controller 负责提交，路由守卫监听会话变化后决定页面终点。
+                onPressed: c.submit,
               ),
             ],
           );

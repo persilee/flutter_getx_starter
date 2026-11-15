@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../common/index.dart';
 import 'splash_controller.dart';
 
-/// 启动页：首帧显示应用名后停留 0.5 秒，按引导标记分流：已完成进入 Login，未完成进入 Welcome。
+/// 启动页：展示应用名，首帧显示后固定停留 0.5 秒，再按 welcome / token 分流。
 ///
 /// Get.put / Get.delete 配对。跳转只用 context.go。
 class SplashPage extends StatefulWidget {
@@ -20,19 +20,15 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
-  // 保存 Timer 引用才能在 dispose 中取消；首帧之前它仍为 null。
   Timer? _timer;
 
   @override
   // 页面创建时接入本页面拥有的控制器或资源。
   void initState() {
     super.initState();
-    // 注册本页 Controller；离开时用相同类型 Get.delete 配对清理。
     Get.put(SplashController());
-    // 等待首帧绘制后再开始计时，让用户先看到应用名。
-    // 首帧回调本身不能在这里取消，所以回调内仍要检查 mounted。
+    // 首帧显示后才启动停留计时，避免初始化耗时占用 Splash 的可见时间。
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // 异步回调执行时页面可能已被移除，此时不能再操作页面资源。
       if (!mounted) return;
       // 从应用名实际显示的首帧开始计时，离开页面时取消。
       _timer = Timer(const Duration(milliseconds: 500), _goNext);
@@ -42,23 +38,25 @@ class _SplashPageState extends State<SplashPage> {
   @override
   // 页面离开时释放本页面拥有的资源，避免重复进入后残留状态。
   void dispose() {
-    // 提前离开 Splash 时取消尚未触发的跳转，避免旧页面再次导航。
+    // 提前离开页面时取消 Timer；回调中的 mounted 检查继续保护 BuildContext。
     _timer?.cancel();
+    // 删除对应依赖并触发其 onClose；页面创建的 PageController 等资源另行释放。
     Get.delete<SplashController>();
     super.dispose();
   }
 
-  /// 按引导标记分流：已完成进入 Login，未完成进入 Welcome。
+  /// 未看 welcome → welcome；有 token → home；否则 login。
   void _goNext() {
-    // 再次检查页面是否仍在树中，安全使用下面的 BuildContext。
     if (!mounted) return;
-    // go 切换到下一流程的路由配置，不把 Splash 作为 push 的上一页保留。
-    context.go(
-      // 读取已恢复的引导标记；这里只判断引导状态，不判断认证状态。
-      Get.find<AppLaunchService>().hasSeenWelcome
-          ? AppRoutes.login
-          : AppRoutes.welcome,
-    );
+    final hasSeenWelcome = Get.find<AppLaunchService>().hasSeenWelcome;
+    final hasToken = Get.find<TokenService>().hasToken;
+    if (!hasSeenWelcome) {
+      context.go(AppRoutes.welcome);
+    } else if (hasToken) {
+      context.go(AppRoutes.home);
+    } else {
+      context.go(AppRoutes.login);
+    }
   }
 
   @override
