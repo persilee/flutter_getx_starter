@@ -96,7 +96,11 @@ class NetworkService extends GetxService {
     configurePlatformAdapter(dio);
 
     // 按本节已经实现的能力装配请求链；后续课节逐步增加鉴权和日志处理。
-    dio.interceptors.addAll([ErrorInterceptor()]);
+    dio.interceptors.addAll([
+      // 来源配置控制日志开关；日志拦截器先脱敏再输出。
+      if (endpoint.enableLogging) LoggingInterceptor(),
+      ErrorInterceptor(),
+    ]);
 
     return dio;
   }

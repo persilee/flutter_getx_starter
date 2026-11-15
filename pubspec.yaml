@@ -27,6 +27,8 @@ dependencies:
   dio: 5.11.1
   # iOS / macOS 使用系统网络栈；其他平台在本节保留 Dio 默认适配器
   native_dio_adapter: 1.8.0
+  # 日志打印
+  logger: 2.8.0
 
 dev_dependencies:
   flutter_test:

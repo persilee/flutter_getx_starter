@@ -1,5 +1,14 @@
 {
   "cmake.ignoreCMakeListsMissing": true,
   "Codegeex.RepoIndex": true,
-  "cSpell.words": ["prefs"]
+  "cSpell.words": [
+    "accesstoken",
+    "idtoken",
+    "prefs",
+    "purchasetoken",
+    "refreshtoken",
+    "setcookie",
+    "signedrenewalinfo",
+    "signedtransaction"
+  ]
 }

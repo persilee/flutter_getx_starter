@@ -23,4 +23,25 @@ void main() {
       expect(userFacingErrorMessage(e), 'controlled');
     }
   });
+  test('连接超时映射为网络异常', () async {
+    final dio = Dio(BaseOptions(baseUrl: 'https://controlled.test'));
+    dio.httpClientAdapter = FakeAdapter(
+      (options) async => throw DioException(
+        requestOptions: options,
+        type: DioExceptionType.connectionTimeout,
+      ),
+    );
+    dio.interceptors.add(ErrorInterceptor());
+    // 为异步异常建立断言，必须 await，确保失败结果在测试结束前被验证。
+    await expectLater(
+      dio.get('/slow'),
+      throwsA(
+        isA<DioException>().having(
+          (e) => e.error,
+          '业务异常',
+          isA<NetworkException>(),
+        ),
+      ),
+    );
+  });
 }
