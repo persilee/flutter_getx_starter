@@ -2,6 +2,7 @@
 
 export 'adaptive_spacing.dart';
 export 'app_colors.dart';
+export 'app_glass.dart';
 export 'app_media_colors.dart';
 export 'app_radius.dart';
 export 'app_style.dart';
