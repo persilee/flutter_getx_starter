@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            Text(TrKeys.ready.tr),
+            Text(TrKeys.ready.tr, style: AppTextStyles.body),
             FilledButton(
               key: const Key('open-counter'),
               onPressed: () => Navigator.of(context).push(
