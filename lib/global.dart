@@ -1,9 +1,10 @@
 // 按依赖顺序注册公共服务，页面在初始化完成后再读取服务。
 
-import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:get/get.dart';
 
 import 'common/index.dart';
+
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 class Global {
   static AdaptiveThemeMode? savedThemeMode;
@@ -16,7 +17,7 @@ class Global {
     await Get.putAsync(() => LocaleService(Get.find()).init());
     // 从存储恢复凭证后再注册会话和网络，后续同步读取依赖这份内存记录。
     Get.put(TokenService(Get.find()));
-    // 先恢复语言和凭证后再注册引导标记，避免在未初始化的服务上读取。
     Get.put(AppLaunchService(Get.find()));
+    Get.put(SessionService(Get.find<TokenService>()));
   }
 }
